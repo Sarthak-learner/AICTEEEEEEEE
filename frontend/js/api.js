@@ -72,10 +72,17 @@ class ApiClient {
   }
 
   // Auth: Login
-  async login(identifierOrEmail, password = "demo1234") {
+  async login(identifierOrEmail, password, isSwitch = false) {
+    if (!password) {
+      throw new Error("Password is required.");
+    }
+    const headers = { "Content-Type": "application/json" };
+    if (isSwitch) {
+      headers["X-Switch-Account"] = "true";
+    }
     const data = await this.request("/auth/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ identifier: identifierOrEmail, email: identifierOrEmail, password }),
     });
 
@@ -162,7 +169,7 @@ class ApiClient {
 
   async uploadDocument(appId, vno = 1, file, docType = "AUTO") {
     if (!this.token) {
-      await this.login(this.currentUser?.email || "admin@sunrise-demo.example", "demo1234");
+      throw new Error("Authentication required. Please sign in to upload documents.");
     }
 
     const formData = new FormData();

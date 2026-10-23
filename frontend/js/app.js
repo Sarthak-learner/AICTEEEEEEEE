@@ -130,29 +130,158 @@ function setupEventListeners() {
     });
   });
 
-  // Persona Switcher
-  elements.personaSelect.addEventListener("change", async (e) => {
-    const email = e.target.value;
-    try {
-      const res = await api.login(email, "demo1234");
-      state.user = res.user;
-      updateUserDisplay();
-      showToast(`Switched persona to: ${res.user.name} (${res.user.role})`, "success");
-      
-      // Auto-switch tabs to relevant persona view
-      if (res.user.role === "INSTITUTION_ADMIN") {
-        switchTab("institution");
-      } else if (res.user.role === "CURATOR") {
-        switchTab("rulebook");
-      } else if (res.user.role === "AUDITOR") {
-        switchTab("audit");
-      } else {
-        switchTab("officer");
+  // ── Secure Account Switcher (Credential Required) ────────────────────────
+  const switchModal = document.getElementById("switchAccountModal");
+  const switchTargetName = document.getElementById("switchAccountTargetName");
+  const switchTargetEmail = document.getElementById("switchAccountTargetEmail");
+  const switchTargetRole = document.getElementById("switchAccountTargetRole");
+  const switchTargetEmailVal = document.getElementById("switchAccountTargetEmailVal");
+  const switchPasswordInput = document.getElementById("switchAccountPasswordInput");
+  const switchAlert = document.getElementById("switchAccountAlert");
+  const switchAlertMsg = document.getElementById("switchAccountAlertMsg");
+  const switchForm = document.getElementById("switchAccountForm");
+  const btnSwitchCancel = document.getElementById("btnSwitchAccountCancel");
+  const btnSwitchClose = document.getElementById("btnSwitchAccountClose");
+  const btnSwitchSubmit = document.getElementById("btnSwitchAccountSubmit");
+  const btnSwitchText = document.getElementById("btnSwitchAccountText");
+  const switchSpinner = document.getElementById("switchAccountSpinner");
+  const btnToggleSwitchPassword = document.getElementById("btnToggleSwitchPassword");
+  const switchEyeIcon = document.getElementById("switchEyeIcon");
+
+  function cancelAccountSwitch() {
+    if (elements.personaSelect && state.user) {
+      elements.personaSelect.value = state.user.email;
+    }
+    if (switchModal) switchModal.classList.remove("open");
+    if (switchPasswordInput) switchPasswordInput.value = "";
+    if (switchAlert) switchAlert.style.display = "none";
+  }
+
+  if (btnSwitchCancel) btnSwitchCancel.addEventListener("click", cancelAccountSwitch);
+  if (btnSwitchClose) btnSwitchClose.addEventListener("click", cancelAccountSwitch);
+
+  if (btnToggleSwitchPassword && switchPasswordInput) {
+    btnToggleSwitchPassword.addEventListener("click", () => {
+      const isPwd = switchPasswordInput.type === "password";
+      switchPasswordInput.type = isPwd ? "text" : "password";
+      if (switchEyeIcon) {
+        switchEyeIcon.innerHTML = isPwd
+          ? `<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>`
+          : `<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>`;
       }
-    } catch (err) {
-      showToast(`Persona switch failed: ${err.message}`, "error");
+    });
+  }
+
+  // Intercept dropdown change - DO NOT switch active account without credentials!
+  elements.personaSelect.addEventListener("change", (e) => {
+    const selectedEmail = e.target.value;
+    if (state.user && selectedEmail === state.user.email) {
+      return; // Already active user
+    }
+
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const targetName = selectedOption.dataset.name || selectedOption.text;
+    const targetRole = selectedOption.dataset.role || "OFFICER";
+    const targetId = selectedOption.dataset.id || selectedEmail;
+
+    // Display selected account details in the modal
+    if (switchTargetName) switchTargetName.textContent = targetName;
+    if (switchTargetEmail) switchTargetEmail.textContent = `${selectedEmail} [${targetId}]`;
+    if (switchTargetRole) switchTargetRole.textContent = targetRole;
+    if (switchTargetEmailVal) switchTargetEmailVal.value = selectedEmail;
+    if (switchPasswordInput) switchPasswordInput.value = "";
+    if (switchAlert) switchAlert.style.display = "none";
+    if (btnSwitchSubmit) btnSwitchSubmit.disabled = false;
+    if (switchSpinner) switchSpinner.style.display = "none";
+    if (btnSwitchText) btnSwitchText.textContent = "Authenticate & Switch";
+
+    // Open credential verification modal
+    if (switchModal) {
+      switchModal.classList.add("open");
+      setTimeout(() => switchPasswordInput && switchPasswordInput.focus(), 100);
     }
   });
+
+  // Handle password submission and credential verification
+  if (switchForm) {
+    switchForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const targetEmail = switchTargetEmailVal.value;
+      const password = switchPasswordInput.value;
+
+      if (!targetEmail || !password) {
+        if (switchAlert && switchAlertMsg) {
+          switchAlertMsg.textContent = "Please enter the password for this account.";
+          switchAlert.style.display = "flex";
+        }
+        return;
+      }
+
+      // UI loading state
+      if (btnSwitchSubmit) btnSwitchSubmit.disabled = true;
+      if (switchSpinner) switchSpinner.style.display = "inline-block";
+      if (btnSwitchText) btnSwitchText.textContent = "Verifying Credentials...";
+      if (switchAlert) switchAlert.style.display = "none";
+
+      try {
+        // Authenticate with backend using existing trusted endpoint with session rotation
+        const res = await api.login(targetEmail, password, true);
+        if (res.success && res.user) {
+          // Invalidate client-side cached data from previous identity
+          state.user = res.user;
+          state.application = null;
+          state.reportData = null;
+          state.documents = [];
+          state.auditEvents = [];
+          state.rulebooks = [];
+          state.selectedFinding = null;
+          state.selectedEdge = null;
+
+          // Update UI representation with trusted new identity
+          updateUserDisplay();
+
+          // Refresh data for the newly authenticated account
+          await loadDashboardData();
+          await loadDocuments();
+          if (state.currentTab === "audit") await loadAuditEvents();
+          if (state.currentTab === "rulebook") await loadRulebooks();
+
+          // Switch active module view if appropriate for new role
+          if (res.user.role === "INSTITUTION_ADMIN") {
+            switchTab("institution");
+          } else if (res.user.role === "CURATOR") {
+            switchTab("rulebook");
+          } else if (res.user.role === "AUDITOR") {
+            switchTab("audit");
+          } else {
+            switchTab("officer");
+          }
+
+          // Close modal and show success toast
+          if (switchModal) switchModal.classList.remove("open");
+          showToast(`Successfully authenticated and switched to: ${res.user.name} (${res.user.role})`, "success");
+        } else {
+          throw new Error("Authentication failed.");
+        }
+      } catch (err) {
+        // Retain the current authenticated session on failure!
+        if (elements.personaSelect && state.user) {
+          elements.personaSelect.value = state.user.email;
+        }
+        if (switchAlert && switchAlertMsg) {
+          switchAlertMsg.textContent = err.message || "Invalid credentials. Current session retained.";
+          switchAlert.style.display = "flex";
+        }
+        if (btnSwitchSubmit) btnSwitchSubmit.disabled = false;
+        if (switchSpinner) switchSpinner.style.display = "none";
+        if (btnSwitchText) btnSwitchText.textContent = "Authenticate & Switch";
+        if (switchPasswordInput) {
+          switchPasswordInput.value = "";
+          switchPasswordInput.focus();
+        }
+      }
+    });
+  }
 
   // Officer Logout Button
   const btnLogout = document.getElementById("btnOfficerLogout");
@@ -742,6 +871,9 @@ function openDeficiencyModal(finding) {
 
 function closeModals() {
   document.querySelectorAll(".modal-backdrop").forEach((m) => m.classList.remove("open"));
+  if (elements.personaSelect && state.user && state.user.email) {
+    elements.personaSelect.value = state.user.email;
+  }
 }
 
 // Audit Trail Viewer

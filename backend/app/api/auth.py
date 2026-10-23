@@ -110,6 +110,15 @@ def login(req: LoginRequest, request: Request, response: Response, db: Session =
     # Clear rate limit counter on success
     clear_failed_attempts(rate_key)
 
+    # Invalidate previous session tokens if this is an explicit session rotation / account switch
+    if request.headers.get("X-Switch-Account") == "true":
+        old_cookie_token = request.cookies.get("sih_session")
+        if old_cookie_token:
+            revoke_token(old_cookie_token)
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            revoke_token(auth_header.split(" ")[1])
+
     # Create tokens
     token_payload = {
         "sub": user.id,

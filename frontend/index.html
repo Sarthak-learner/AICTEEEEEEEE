@@ -127,17 +127,17 @@
               <span>Sign Out</span>
             </button>
 
-            <!-- Demo Persona Switcher (Development Mode) -->
-            <div class="persona-selector-wrapper" style="opacity: 0.75;" title="Demo Persona Quick-Switch (Development Mode)">
+            <!-- Account Switcher Dropdown (Protected by Credential Verification) -->
+            <div class="persona-selector-wrapper" title="Switch Account (Requires Credentials)">
               <div class="persona-avatar" id="userAvatar">👨‍💼</div>
-              <select id="personaSelect" class="persona-select" aria-label="Select Demo User Persona">
-                <option value="rao@aicte-demo.example">R. Rao (Scrutiny Officer - 001)</option>
-                <option value="sharma@aicte-demo.example">V. Sharma (Scrutiny Officer - 002)</option>
-                <option value="kumar@aicte-demo.example">P. Kumar (Supervisor / Senior Reviewer)</option>
-                <option value="admin@aicte-gov.example">System Administrator</option>
-                <option value="admin@sunrise-demo.example">Sunita Sharma (Inst Admin)</option>
-                <option value="singh@aicte-demo.example">A. Singh (Rulebook Curator)</option>
-                <option value="auditor@aicte-demo.example">System Auditor (Auditor)</option>
+              <select id="personaSelect" class="persona-select" aria-label="Switch User Account">
+                <option value="rao@aicte-demo.example" data-name="R. Rao" data-role="SCRUTINY_OFFICER" data-id="OFFICER-001">R. Rao — Scrutiny Officer 001</option>
+                <option value="sharma@aicte-demo.example" data-name="V. Sharma" data-role="SCRUTINY_OFFICER" data-id="OFFICER-002">V. Sharma — Scrutiny Officer 002</option>
+                <option value="kumar@aicte-demo.example" data-name="P. Kumar" data-role="SENIOR_REVIEWER" data-id="SUPERVISOR-001">P. Kumar — Supervisor / Senior Reviewer</option>
+                <option value="admin@aicte-gov.example" data-name="System Administrator" data-role="SYSTEM_ADMIN" data-id="ADMIN-001">System Administrator</option>
+                <option value="admin@sunrise-demo.example" data-name="Sunita Sharma" data-role="INSTITUTION_ADMIN" data-id="INST-ADMIN-01">Sunita Sharma — Institution Administrator</option>
+                <option value="singh@aicte-demo.example" data-name="A. Singh" data-role="CURATOR" data-id="CURATOR-001">A. Singh — Rulebook Curator</option>
+                <option value="auditor@aicte-demo.example" data-name="System Auditor" data-role="AUDITOR" data-id="AUDITOR-001">System Auditor</option>
               </select>
             </div>
           </div>
@@ -578,6 +578,76 @@
         <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
         <button id="btnSubmitDeficiency" class="btn btn-danger">Issue Deficiency Notice</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Secure Account Switch Modal (Credential Verification) ───────────── -->
+  <div class="modal-backdrop" id="switchAccountModal" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <h3 class="card-title" style="margin: 0; font-size: 1.1rem;">Switch Account Authentication</h3>
+        </div>
+        <button class="modal-close" id="btnSwitchAccountClose" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Target Account Info Card -->
+      <div style="background: #F8FAFC; border: 1px solid var(--color-border); border-radius: var(--border-radius-md); padding: 14px 16px; margin-bottom: 18px;">
+        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary); margin-bottom: 4px;">Target Identity</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div>
+            <div id="switchAccountTargetName" style="font-weight: 700; color: var(--color-navy); font-size: 1rem;">Officer Name</div>
+            <div id="switchAccountTargetEmail" style="font-size: 0.82rem; color: var(--color-text-secondary); font-family: monospace;">email@aicte-demo.example</div>
+          </div>
+          <span id="switchAccountTargetRole" class="badge badge-pass" style="font-size: 0.72rem; padding: 4px 8px;">ROLE</span>
+        </div>
+      </div>
+
+      <!-- Error Alert Box -->
+      <div id="switchAccountAlert" class="alert-box alert-error" style="display: none; margin-bottom: 16px;" role="alert">
+        <span id="switchAccountAlertMsg">Authentication failed</span>
+      </div>
+
+      <!-- Credentials Form -->
+      <form id="switchAccountForm" autocomplete="off">
+        <input type="hidden" id="switchAccountTargetEmailVal" value="">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" for="switchAccountPasswordInput">Enter Account Password</label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <input
+              type="password"
+              id="switchAccountPasswordInput"
+              class="form-control"
+              placeholder="Enter security password for this account"
+              required
+              style="padding-right: 42px;"
+            >
+            <button
+              type="button"
+              id="btnToggleSwitchPassword"
+              style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; display: flex; align-items: center;"
+              title="Show or hide password"
+            >
+              <svg id="switchEyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px;">
+          <button type="button" id="btnSwitchAccountCancel" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="btnSwitchAccountSubmit" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+            <span class="spinner" id="switchAccountSpinner" style="display: none; width: 14px; height: 14px; border-width: 2px;"></span>
+            <span id="btnSwitchAccountText">Authenticate &amp; Switch</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

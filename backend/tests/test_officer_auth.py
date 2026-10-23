@@ -91,6 +91,27 @@ def client():
         )
         db.add(u_sup)
 
+    # Create the four standard demo credentials (password: demo1234)
+    demo_creds = [
+        ("user-officer-001", "OFFICER-001", "R. Rao (Synthetic)", "rao@aicte-demo.example", "demo1234", "SCRUTINY_OFFICER"),
+        ("user-officer-002", "OFFICER-002", "V. Sharma (Synthetic)", "sharma@aicte-demo.example", "demo1234", "SCRUTINY_OFFICER"),
+        ("user-senior-001", "SUPERVISOR-001", "P. Kumar (Supervisor)", "kumar@aicte-demo.example", "demo1234", "SENIOR_REVIEWER"),
+        ("user-admin-001", "ADMIN-001", "System Administrator", "admin@aicte-gov.example", "demo1234", "SYSTEM_ADMIN"),
+    ]
+    for uid, off_id, name, email, pwd, role in demo_creds:
+        u_demo = db.query(User).filter(User.officer_id == off_id).first()
+        if not u_demo:
+            u_demo = User(
+                id=uid,
+                officer_id=off_id,
+                name=name,
+                email=email,
+                password_hash=hash_password(pwd),
+                role=role,
+                active=True,
+            )
+            db.add(u_demo)
+
     # Create an Application assigned to Officer 1
     app1 = db.query(Application).filter(Application.id == "app-assigned-to-off1").first()
     if not app1:
@@ -452,3 +473,126 @@ def test_frontend_html_references_absolute_asset_paths(client):
     res_index = client.get("/")
     assert 'href="/css/style.css"' in res_index.text
     assert 'src="/js/app.js"' in res_index.text
+
+
+# ─── 6. Secure Account Switching & Session Rotation Tests ────────────────────
+
+def test_all_four_initial_demo_credentials_authenticate_successfully(client):
+    demo_credentials = [
+        ("OFFICER-001", "demo1234"),  # Officer 1 in demo credentials
+        ("OFFICER-002", "demo1234"),  # Officer 2 in demo credentials
+        ("SUPERVISOR-001", "demo1234"),  # Supervisor in demo credentials
+        ("ADMIN-001", "demo1234"),  # Administrator in demo credentials
+    ]
+    for ident, pwd in demo_credentials:
+        res = client.post("/api/v1/auth/login", json={"identifier": ident, "password": pwd})
+        assert res.status_code == 200, f"Failed for demo account: {ident}"
+        data = res.json()
+        assert "access_token" in data
+        assert data["user"]["officer_id"] == ident
+
+
+def test_session_rotation_account_switch_invalidates_previous_token(client):
+    # 1. Login as Officer 1
+    res1 = client.post("/api/v1/auth/login", json={
+        "identifier": "TEST-OFFICER-1",
+        "password": "OfficerPass123!"
+    })
+    assert res1.status_code == 200
+    token1 = res1.json()["access_token"]
+
+    # Verify Officer 1 session is active
+    me1 = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token1}"})
+    assert me1.status_code == 200
+    assert me1.json()["officer_id"] == "TEST-OFFICER-1"
+
+    # 2. Switch account to Officer 2 with valid credentials (sending previous token in header & cookie)
+    res2 = client.post(
+        "/api/v1/auth/login",
+        headers={"Authorization": f"Bearer {token1}", "X-Switch-Account": "true"},
+        cookies={"sih_session": token1},
+        json={
+            "identifier": "TEST-OFFICER-2",
+            "password": "OfficerPass123!"
+        }
+    )
+    assert res2.status_code == 200
+    token2 = res2.json()["access_token"]
+    assert token2 != token1
+
+    # 3. New token operates as Officer 2
+    me2 = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token2}"})
+    assert me2.status_code == 200
+    assert me2.json()["officer_id"] == "TEST-OFFICER-2"
+
+    # 4. Old token from Officer 1 has been revoked on server side!
+    me1_revoked = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token1}"})
+    assert me1_revoked.status_code == 401
+    assert "revoked" in me1_revoked.json()["detail"].lower()
+
+
+def test_account_switch_failure_preserves_original_session(client):
+    # 1. Login as Officer 1
+    res1 = client.post("/api/v1/auth/login", json={
+        "identifier": "TEST-OFFICER-1",
+        "password": "OfficerPass123!"
+    })
+    token1 = res1.json()["access_token"]
+
+    # 2. Attempt account switch with incorrect password
+    res_fail = client.post(
+        "/api/v1/auth/login",
+        headers={"Authorization": f"Bearer {token1}", "X-Switch-Account": "true"},
+        cookies={"sih_session": token1},
+        json={
+            "identifier": "TEST-OFFICER-2",
+            "password": "WrongPassword999!"
+        }
+    )
+    assert res_fail.status_code == 401
+
+    # 3. Original Officer 1 session must remain completely valid!
+    me_still_valid = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token1}"})
+    assert me_still_valid.status_code == 200
+    assert me_still_valid.json()["officer_id"] == "TEST-OFFICER-1"
+
+
+def test_client_role_tampering_rejected_by_backend(client):
+    # Login as Scrutiny Officer
+    res = client.post("/api/v1/auth/login", json={
+        "identifier": "TEST-OFFICER-1",
+        "password": "OfficerPass123!"
+    })
+    token = res.json()["access_token"]
+
+    # Officer attempts to perform Admin action (create officer account) -> 403 Forbidden
+    res_create = client.post(
+        "/api/v1/auth/officers",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "officer_id": "TAMPERED-OFFICER",
+            "name": "Tampered",
+            "email": "tampered@example.com",
+            "password": "Password123!",
+            "role": "SYSTEM_ADMIN"
+        }
+    )
+    assert res_create.status_code == 403
+
+
+def test_secure_switch_modal_markup_and_script_in_frontend(client):
+    # Check index.html has the credential verification modal
+    res_index = client.get("/")
+    assert 'id="switchAccountModal"' in res_index.text
+    assert 'id="switchAccountPasswordInput"' in res_index.text
+    assert 'id="btnSwitchAccountCancel"' in res_index.text
+    assert 'id="btnSwitchAccountSubmit"' in res_index.text
+
+    # Check dropdown has all persona identities
+    assert "rao@aicte-demo.example" in res_index.text
+    assert "sharma@aicte-demo.example" in res_index.text
+    assert "kumar@aicte-demo.example" in res_index.text
+    assert "admin@aicte-gov.example" in res_index.text
+    assert "admin@sunrise-demo.example" in res_index.text
+    assert "singh@aicte-demo.example" in res_index.text
+    assert "auditor@aicte-demo.example" in res_index.text

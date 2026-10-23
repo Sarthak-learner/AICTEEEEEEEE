@@ -85,3 +85,70 @@ def test_live_health_endpoints():
             res = client.get(path)
             assert res.status_code == 200
             assert res.json().get("status") == "ok"
+
+
+def test_live_account_switching_security():
+    with httpx.Client(base_url=BASE_URL, follow_redirects=True) as client:
+        # 1. Login as Officer 1
+        res1 = client.post("/api/v1/auth/login", json={"identifier": "OFFICER-001", "password": "demo1234"})
+        assert res1.status_code == 200
+        token1 = res1.json()["access_token"]
+
+        me1 = client.get("/api/v1/auth/me")
+        assert me1.status_code == 200
+        assert me1.json()["officer_id"] == "OFFICER-001"
+
+        # 2. Attempt account switch with incorrect password
+        res_fail = client.post(
+            "/api/v1/auth/login",
+            headers={"Authorization": f"Bearer {token1}", "X-Switch-Account": "true"},
+            cookies=client.cookies,
+            json={"identifier": "OFFICER-002", "password": "WrongPassword999!"}
+        )
+        assert res_fail.status_code == 401
+        # Original session must be retained
+        me1_retained = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token1}"})
+        assert me1_retained.status_code == 200
+        assert me1_retained.json()["officer_id"] == "OFFICER-001"
+
+        # 3. Successful account switch to Officer 2
+        res2 = client.post(
+            "/api/v1/auth/login",
+            headers={"Authorization": f"Bearer {token1}", "X-Switch-Account": "true"},
+            cookies=client.cookies,
+            json={"identifier": "OFFICER-002", "password": "demo1234"}
+        )
+        assert res2.status_code == 200
+        token2 = res2.json()["access_token"]
+        assert token2 != token1
+
+        # Current session is now Officer 2
+        me2 = client.get("/api/v1/auth/me")
+        assert me2.status_code == 200
+        assert me2.json()["officer_id"] == "OFFICER-002"
+
+        # Old Officer 1 token is revoked on server
+        me1_revoked = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token1}"})
+        assert me1_revoked.status_code == 401
+        assert "revoked" in me1_revoked.json().get("detail", "").lower()
+
+        # 4. Switch from Officer 2 to Supervisor
+        res3 = client.post(
+            "/api/v1/auth/login",
+            headers={"Authorization": f"Bearer {token2}", "X-Switch-Account": "true"},
+            cookies=client.cookies,
+            json={"identifier": "SUPERVISOR-001", "password": "demo1234"}
+        )
+        assert res3.status_code == 200
+        assert res3.json()["user"]["role"] in ("SENIOR_REVIEWER", "SUPERVISOR")
+
+        # 5. Switch to Admin
+        res4 = client.post(
+            "/api/v1/auth/login",
+            headers={"X-Switch-Account": "true"},
+            cookies=client.cookies,
+            json={"identifier": "ADMIN-001", "password": "demo1234"}
+        )
+        assert res4.status_code == 200
+        assert res4.json()["user"]["role"] == "SYSTEM_ADMIN"
+
