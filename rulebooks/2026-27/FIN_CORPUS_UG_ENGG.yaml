@@ -1,0 +1,31 @@
+rule_key: FIN_CORPUS_UG_ENGG
+title: Financial corpus / annual income threshold (UG Engineering)
+clause_ref: "APH 2024-27, <clause to be verified against handbook>"
+source_page: "<page to be verified>"
+verified: false
+severity: CRITICAL
+applicability:
+  academic_year: "2026-27"
+  program_level: UG
+inputs:
+  audited_corpus_cr:
+    type: float
+    min_confidence: 0.85
+    description: "Audited corpus fund or annual income in crores INR"
+check:
+  fn: sum_at_least
+  params:
+    total: audited_corpus_cr
+    minimum: 5.0
+explain: "Required minimum corpus Rs 5 Cr; found Rs {total} Cr. NOTE: Rs 5 Cr is ILLUSTRATIVE."
+tests:
+  - inputs: {audited_corpus_cr: 6.0}
+    expect: PASS
+  - inputs: {audited_corpus_cr: 3.5}
+    expect: FAIL
+  - inputs: {audited_corpus_cr: null}
+    expect: INDETERMINATE
+override:
+  allowed: true
+  requires_reason: true
+  role: SENIOR_REVIEWER

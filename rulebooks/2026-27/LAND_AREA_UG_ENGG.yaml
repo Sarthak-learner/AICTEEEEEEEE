@@ -1,0 +1,30 @@
+rule_key: LAND_AREA_UG_ENGG
+title: Minimum land area (UG Engineering)
+clause_ref: "APH 2024-27, <clause to be verified against handbook>"
+source_page: "<page to be verified>"
+verified: false
+severity: CRITICAL
+applicability:
+  academic_year: "2026-27"
+  program_level: UG
+inputs:
+  total_land_area_acres:
+    type: float
+    min_confidence: 0.80
+check:
+  fn: sum_at_least
+  params:
+    total: total_land_area_acres
+    minimum: 2.5
+explain: "Required minimum land 2.5 acres; found {total} acres. NOTE: 2.5 acres is ILLUSTRATIVE."
+tests:
+  - inputs: {total_land_area_acres: 3.0}
+    expect: PASS
+  - inputs: {total_land_area_acres: 2.1}
+    expect: FAIL
+  - inputs: {total_land_area_acres: null}
+    expect: INDETERMINATE
+override:
+  allowed: true
+  requires_reason: true
+  role: SENIOR_REVIEWER

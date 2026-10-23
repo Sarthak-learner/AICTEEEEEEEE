@@ -1,0 +1,45 @@
+rule_key: DOC_COMPLETENESS
+title: Document completeness check
+clause_ref: "APH 2024-27, Application submission requirements"
+source_page: "<page to be verified>"
+verified: false
+severity: CRITICAL
+applicability:
+  academic_year: "2026-27"
+  program_level: UG
+inputs:
+  submitted_doc_types:
+    type: list
+    min_confidence: 0.70
+check:
+  fn: set_complete
+  params:
+    present_items: submitted_doc_types
+    required_items:
+      - APPLICATION_FORM
+      - FACULTY_LIST
+      - FINANCIAL_STATEMENT
+      - LAND_DEED
+      - BUILDING_PLAN
+      - FACULTY_AFFIDAVIT
+explain: "Required documents: {required_items}. Missing: see explanation."
+tests:
+  - inputs:
+      submitted_doc_types:
+        - APPLICATION_FORM
+        - FACULTY_LIST
+        - FINANCIAL_STATEMENT
+        - LAND_DEED
+        - BUILDING_PLAN
+        - FACULTY_AFFIDAVIT
+    expect: PASS
+  - inputs:
+      submitted_doc_types:
+        - APPLICATION_FORM
+        - FACULTY_LIST
+    expect: FAIL
+  - inputs: {submitted_doc_types: null}
+    expect: INDETERMINATE
+override:
+  allowed: false
+  requires_reason: false

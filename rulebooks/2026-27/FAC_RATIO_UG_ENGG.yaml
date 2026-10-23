@@ -1,0 +1,39 @@
+rule_key: FAC_RATIO_UG_ENGG
+title: Faculty to student ratio (UG Engineering)
+clause_ref: "APH 2024-27, <clause to be verified against handbook>"
+source_page: "<page to be verified>"
+verified: false
+severity: CRITICAL
+applicability:
+  academic_year: "2026-27"
+  program_level: UG
+  institution_type: [Private, Government, Aided]
+inputs:
+  total_faculty:
+    type: int
+    min_confidence: 0.85
+  sanctioned_intake_total:
+    type: int
+    min_confidence: 0.85
+check:
+  fn: ratio_at_least
+  params:
+    numerator: total_faculty
+    denominator: sanctioned_intake_total
+    minimum: 0.0667
+explain: "Required ratio {minimum} (1:15); found {observed}. NOTE: 0.0667 is ILLUSTRATIVE. Verify against APH."
+tests:
+  - inputs: {total_faculty: 100, sanctioned_intake_total: 1200}
+    expect: PASS
+  - inputs: {total_faculty: 50, sanctioned_intake_total: 1200}
+    expect: FAIL
+  - inputs: {total_faculty: null, sanctioned_intake_total: 1200}
+    expect: INDETERMINATE
+  - inputs: {total_faculty: 80, sanctioned_intake_total: 1200}
+    expect: PASS
+  - inputs: {total_faculty: 79, sanctioned_intake_total: 1200}
+    expect: FAIL
+override:
+  allowed: true
+  requires_reason: true
+  role: SENIOR_REVIEWER

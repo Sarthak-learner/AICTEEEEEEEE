@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AICTE Compliance Verification Engine (SIH26261). Automated AI-assisted application validation, OCR evidence linking, deterministic rule evaluation, and cross-document consistency graph.">
+  <title>AICTE Compliance Verification Engine | SIH26261</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ── Disclaimer Banner (full width, top) ────────────────────────────── -->
+    <aside class="disclaimer-banner" role="alert">
+      <span class="disclaimer-tag">Demo Prototype</span>
+      <span>SYNTHETIC DEMO DATA ONLY — NOT AN OFFICIAL AICTE DECISION ENGINE — VERIFY RULES AT
+        <a href="https://aicte.gov.in" target="_blank" rel="noopener" style="color: #93C5FD; text-decoration: underline;">AICTE.GOV.IN</a>
+      </span>
+    </aside>
+
+    <!-- ── App Body (sidebar + right pane) ───────────────────────────────── -->
+    <div class="app-body">
+
+      <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+      <nav class="sidebar" aria-label="Main Navigation">
+
+        <!-- Brand -->
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <div>
+            <div class="sidebar-brand-name">AICTE Compliance</div>
+            <div class="sidebar-brand-sub">Verification Engine</div>
+          </div>
+        </div>
+
+        <!-- Nav Items -->
+        <div class="sidebar-nav">
+          <div class="sidebar-nav-label">Modules</div>
+
+          <button class="sidebar-item active" data-tab="officer" id="tab-officer" aria-current="page">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+            <span>Officer Console</span>
+          </button>
+
+          <button class="sidebar-item" data-tab="graph" id="tab-graph">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            <span>Consistency Graph</span>
+          </button>
+
+          <button class="sidebar-item" data-tab="institution" id="tab-institution">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 22h16"/>
+              <path d="M4 10h16"/>
+              <path d="M12 2 2 7h20z"/>
+              <path d="M6 10v12"/>
+              <path d="M10 10v12"/>
+              <path d="M14 10v12"/>
+              <path d="M18 10v12"/>
+            </svg>
+            <span>Institution Portal</span>
+          </button>
+
+          <button class="sidebar-item" data-tab="rulebook" id="tab-rulebook">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+              <path d="M6 6h10"/>
+              <path d="M6 10h10"/>
+            </svg>
+            <span>APH Rulebook</span>
+          </button>
+
+          <button class="sidebar-item" data-tab="audit" id="tab-audit">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            <span>Audit Chain</span>
+          </button>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+          <div class="sidebar-badge">SIH26261</div>
+          <div class="sidebar-footer-text">Demo Prototype Only</div>
+        </div>
+
+      </nav>
+
+      <!-- ── Right Pane ───────────────────────────────────────────────────── -->
+      <div class="right-pane">
+
+        <!-- ── Top Bar ────────────────────────────────────────────────────── -->
+        <header class="topbar">
+          <div class="topbar-breadcrumb">
+            <span class="topbar-module">AICTE Compliance Engine</span>
+            <span class="topbar-sep">›</span>
+            <span class="topbar-page" id="topbar-page-title">Application Scrutiny</span>
+          </div>
+          <div class="topbar-controls">
+            <!-- Officer Identity Display -->
+            <div id="officerIdentityBadge" style="display: flex; align-items: center; gap: 8px; margin-right: 12px; padding: 4px 10px; border-radius: var(--border-radius-md); background: #F1F5F9; border: 1px solid var(--color-border); font-size: 0.82rem;">
+              <span style="font-weight: 600; color: var(--color-navy);" id="officerDisplayName">Officer Session</span>
+              <span class="badge badge-pass" id="officerRoleBadge" style="font-size: 0.7rem; padding: 2px 6px;">OFFICER</span>
+            </div>
+
+            <!-- Sign Out Button -->
+            <button id="btnOfficerLogout" class="btn btn-secondary btn-sm" style="display: flex; align-items: center; gap: 5px; margin-right: 14px; font-size: 0.78rem; padding: 5px 10px;" title="Secure Sign Out">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              <span>Sign Out</span>
+            </button>
+
+            <!-- Demo Persona Switcher (Development Mode) -->
+            <div class="persona-selector-wrapper" style="opacity: 0.75;" title="Demo Persona Quick-Switch (Development Mode)">
+              <div class="persona-avatar" id="userAvatar">👨‍💼</div>
+              <select id="personaSelect" class="persona-select" aria-label="Select Demo User Persona">
+                <option value="rao@aicte-demo.example">R. Rao (Scrutiny Officer - 001)</option>
+                <option value="sharma@aicte-demo.example">V. Sharma (Scrutiny Officer - 002)</option>
+                <option value="kumar@aicte-demo.example">P. Kumar (Supervisor / Senior Reviewer)</option>
+                <option value="admin@aicte-gov.example">System Administrator</option>
+                <option value="admin@sunrise-demo.example">Sunita Sharma (Inst Admin)</option>
+                <option value="singh@aicte-demo.example">A. Singh (Rulebook Curator)</option>
+                <option value="auditor@aicte-demo.example">System Auditor (Auditor)</option>
+              </select>
+            </div>
+          </div>
+        </header>
+
+        <!-- ── Main Content ────────────────────────────────────────────────── -->
+        <main class="main-content">
+
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <!-- VIEW 1: Scrutiny Officer Console (Flagship View)               -->
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <section id="view-officer" class="tab-view active" aria-labelledby="officer-heading">
+
+            <!-- Page Header -->
+            <div class="page-header">
+              <div class="page-header-content">
+                <h1 class="page-title" id="officer-heading">Application Scrutiny</h1>
+                <p class="page-desc">Review AI-assisted compliance findings for AICTE extension-of-approval applications. Confirm, overrule, or issue formal deficiency notices.</p>
+              </div>
+              <div class="page-header-actions">
+                <button id="btnTriggerVerify" class="btn btn-secondary btn-sm">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                    <path d="M3 3v5h5"/>
+                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                    <path d="M16 16h5v5"/>
+                  </svg>
+                  Re-evaluate Run
+                </button>
+                <button id="btnDownloadJson" class="btn btn-secondary btn-sm">Export JSON</button>
+                <button id="btnDownloadPdf" class="btn btn-primary btn-sm">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Download PDF Report
+                </button>
+              </div>
+            </div>
+
+            <!-- Summary Stats Grid -->
+            <div class="summary-grid">
+              <div class="stat-card stat-info">
+                <div class="stat-card-top">
+                  <span class="stat-label">Evaluated Rules</span>
+                  <div class="stat-icon">⚖</div>
+                </div>
+                <div class="stat-value" id="statTotal">6</div>
+                <div class="stat-desc">Deterministic APH 2026-27 rules</div>
+              </div>
+
+              <div class="stat-card stat-pass">
+                <div class="stat-card-top">
+                  <span class="stat-label">Compliant Norms</span>
+                  <div class="stat-icon">✓</div>
+                </div>
+                <div class="stat-value" id="statPass">5</div>
+                <div class="stat-desc">Land, Built-up, Cadre, Corpus, Docs</div>
+              </div>
+
+              <div class="stat-card stat-fail">
+                <div class="stat-card-top">
+                  <span class="stat-label">Deficiencies</span>
+                  <div class="stat-icon">✕</div>
+                </div>
+                <div class="stat-value" id="statFail">1</div>
+                <div class="stat-desc">Faculty Ratio Deficient</div>
+              </div>
+
+              <div class="stat-card stat-warn">
+                <div class="stat-card-top">
+                  <span class="stat-label">Cross-Doc Mismatches</span>
+                  <div class="stat-icon">⚡</div>
+                </div>
+                <div class="stat-value" id="statMismatches">2</div>
+                <div class="stat-desc">Deed vs Plan Contradictions Detected</div>
+              </div>
+            </div>
+
+            <!-- Application Info Bar -->
+            <div class="app-info-bar">
+              <div class="app-info-meta">
+                <div class="app-info-field">
+                  <span class="app-info-field-label">Application ID</span>
+                  <span class="app-info-field-value mono">APP-2026-0042</span>
+                </div>
+                <div class="app-info-field">
+                  <span class="app-info-field-label">Institution</span>
+                  <span class="app-info-field-value">Sunrise Institute of Technology</span>
+                </div>
+                <div class="app-info-field">
+                  <span class="app-info-field-label">Program</span>
+                  <span class="app-info-field-value">UG Engineering • 2026-27</span>
+                </div>
+                <div class="app-info-field">
+                  <span class="app-info-field-label">Type</span>
+                  <span class="app-info-field-value">Extension of Approval</span>
+                </div>
+              </div>
+              <span class="badge badge-indeterminate">Under Review</span>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+              <div class="filter-pills">
+                <button class="filter-pill active" data-filter="ALL">All Findings (6)</button>
+                <button class="filter-pill" data-filter="FAIL">Deficiencies (1)</button>
+                <button class="filter-pill" data-filter="PASS">Compliant (5)</button>
+                <button class="filter-pill" data-filter="INDETERMINATE">Indeterminate (0)</button>
+              </div>
+              <span style="font-size: 0.78rem; color: var(--color-text-secondary);">Click 🔍 on any row to inspect source bounding boxes</span>
+            </div>
+
+            <!-- Findings Table -->
+            <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--border-radius-lg); overflow: hidden; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+              <div class="table-responsive" style="border: none; border-radius: 0;">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Rule Key &amp; Title</th>
+                      <th>Status</th>
+                      <th>Severity</th>
+                      <th>Required vs Observed</th>
+                      <th>Evaluation Detail</th>
+                      <th>Source Evidence</th>
+                      <th>3-Click Resolution</th>
+                    </tr>
+                  </thead>
+                  <tbody id="findingsTableBody">
+                    <!-- Dynamically populated by app.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Evidence Split View Inspector -->
+            <div class="evidence-split-view">
+
+              <!-- Document Canvas Preview -->
+              <div class="doc-viewer-panel">
+                <div class="doc-viewer-header">
+                  <span id="docViewerName">02_FACULTY_LIST.pdf</span>
+                  <span id="docViewerPage" class="badge badge-pass">Page 1</span>
+                </div>
+                <div class="pdf-preview-canvas">
+                  <canvas id="evidenceCanvas"></canvas>
+                </div>
+              </div>
+
+              <!-- Evidence Details Panel -->
+              <div class="evidence-detail-card">
+                <div>
+                  <div class="card-header" style="padding: 0; margin-bottom: 16px;">
+                    <div>
+                      <div class="card-title" style="font-size: 0.95rem;">Evidence &amp; Traceability Card</div>
+                    </div>
+                    <span class="badge badge-info" id="evidenceStatusBadge">Evidence Verified</span>
+                  </div>
+
+                  <div class="form-group">
+                    <span class="form-label">Extracted Snippet from Document Text Layer</span>
+                    <blockquote id="evidenceSnippetText" class="evidence-snippet">
+                      "Total Teaching Faculty: 58"
+                    </blockquote>
+                  </div>
+
+                  <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div>
+                      <span class="form-label">Regulatory Clause Reference</span>
+                      <div id="evidenceClauseText" class="mono" style="font-size: 0.85rem; color: var(--color-accent); font-weight: 600;">APH 2026-27 Clause 7.1</div>
+                    </div>
+                    <div>
+                      <span class="form-label">OCR Confidence</span>
+                      <div id="evidenceConfScore" class="mono" style="font-size: 0.85rem; color: var(--color-success); font-weight: 700;">98%</div>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <span class="form-label">Integrity &amp; Tamper Verification</span>
+                    <p style="font-size: 0.82rem; color: var(--color-text-secondary); line-height: 1.5;">
+                      Native PDF text layer parsed without modification. Digital signature status: <em>Signed copy present</em>. Perceptual image hash verified.
+                    </p>
+                  </div>
+                </div>
+
+                <div style="padding-top: 14px; border-top: 1px solid var(--color-border); display: flex; gap: 8px;">
+                  <button class="btn btn-secondary btn-sm" onclick="alert('Viewing raw bounding box token metadata.')">View Token BBox</button>
+                </div>
+              </div>
+
+            </div>
+
+          </section>
+
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <!-- VIEW 2: Cross-Document Consistency Graph (Flagship Feature)    -->
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <section id="view-graph" class="tab-view" aria-labelledby="graph-heading">
+
+            <div class="page-header">
+              <div class="page-header-content">
+                <h1 class="page-title" id="graph-heading">Cross-Document Consistency Graph</h1>
+                <p class="page-desc">Every extracted entity is verified across uploaded documents (Application, Deed, Plan, Affidavit, Faculty List). Red dashed edges indicate contradictions.</p>
+              </div>
+              <span class="badge badge-fail">2 Contradictions Planted</span>
+            </div>
+
+            <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 20px;">
+              <div class="consistency-graph-container">
+                <div class="graph-legend">
+                  <div class="legend-item"><div class="legend-dot match"></div> Consistent Values</div>
+                  <div class="legend-item"><div class="legend-dot mismatch"></div> Contradictory Data</div>
+                </div>
+                <svg id="consistencyGraphSvg" class="graph-canvas" aria-label="Cross-document consistency graph"></svg>
+              </div>
+            </div>
+
+            <!-- Edge Detail Panel -->
+            <div id="graphEdgeDetail">
+              <div class="card" style="text-align: center; color: var(--color-text-secondary); padding: 28px; font-size: 0.9rem;">
+                👈 Click on any relationship link in the graph above to inspect variance details and source document evidence.
+              </div>
+            </div>
+
+          </section>
+
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <!-- VIEW 3: Institution Self-Disclosure Portal                     -->
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <section id="view-institution" class="tab-view" aria-labelledby="inst-heading">
+
+            <div class="page-header">
+              <div class="page-header-content">
+                <h1 class="page-title" id="inst-heading">Institution Self-Disclosure Portal</h1>
+                <p class="page-desc">Sunrise Institute of Technology • AICTE Institution ID: AICTE-DEMO-12345</p>
+              </div>
+              <span class="badge badge-fail">Deficiency Notice Issued</span>
+            </div>
+
+            <!-- Document Upload Dropzone -->
+            <div class="card" style="margin-bottom: 20px;">
+              <div class="dropzone" id="docUploadDropzone" style="margin-bottom: 20px;">
+                <div class="dropzone-icon">📄</div>
+                <h3 style="font-size: 1rem; color: var(--color-navy); margin-bottom: 6px;">Upload Resubmission or Updated Documents</h3>
+                <p style="font-size: 0.83rem; color: var(--color-text-secondary); margin-bottom: 14px;">
+                  Drag &amp; drop PDFs or click to browse. Magic bytes verified automatically.
+                </p>
+                <div style="display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;" onclick="event.stopPropagation()">
+                  <label for="uploadDocType" style="font-size: 0.83rem; color: var(--color-text-secondary); font-weight: 600;">Target Document Type:</label>
+                  <select id="uploadDocType" class="form-select" style="max-width: 260px; padding: 6px 10px;">
+                    <option value="AUTO">✨ Auto-Detect Classification</option>
+                    <option value="APPLICATION_FORM">APPLICATION_FORM (Application)</option>
+                    <option value="FACULTY_LIST">FACULTY_LIST (Staff &amp; Designation)</option>
+                    <option value="FINANCIAL_STATEMENT">FINANCIAL_STATEMENT (Balance Sheet)</option>
+                    <option value="LAND_DEED">LAND_DEED (Registered Sale Deed)</option>
+                    <option value="BUILDING_PLAN">BUILDING_PLAN (Floor Drawings)</option>
+                    <option value="FACULTY_AFFIDAVIT">FACULTY_AFFIDAVIT (Notarized Affidavit)</option>
+                    <option value="OTHER">OTHER (Supporting Document)</option>
+                  </select>
+                </div>
+                <input type="file" id="fileInput" style="display: none;" accept=".pdf,.png,.jpg,.jpeg,.tiff">
+                <button type="button" id="btnBrowseDoc" class="btn btn-primary btn-sm">Select Document File</button>
+                <div id="uploadProgressContainer" style="display: none;">
+                  <span id="uploadProgressText">Uploading...</span>
+                </div>
+              </div>
+
+              <!-- Document Checklist -->
+              <div class="section-header">
+                <div>
+                  <div class="section-title">Mandatory Submission Checklist (2026-27 APH)</div>
+                </div>
+                <span id="docsCountBadge" class="badge badge-neutral">6 Documents Ingested</span>
+              </div>
+              <div class="table-responsive">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Doc Type</th>
+                      <th>Uploaded File</th>
+                      <th>Size</th>
+                      <th>Ingestion Hash (SHA-256)</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="uploadedDocsTableBody">
+                    <tr>
+                      <td><strong>APPLICATION_FORM</strong></td>
+                      <td>01_APPLICATION_FORM.pdf</td>
+                      <td>8.4 KB</td>
+                      <td class="mono" style="font-size: 0.72rem;">e4b1a7...3f2c</td>
+                      <td><span class="badge badge-pass">Processed</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>FACULTY_LIST</strong></td>
+                      <td>02_FACULTY_LIST.pdf</td>
+                      <td>11.0 KB</td>
+                      <td class="mono" style="font-size: 0.72rem;">78c2d9...1e4a</td>
+                      <td><span class="badge badge-pass">Processed</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>FINANCIAL_STATEMENT</strong></td>
+                      <td>03_FINANCIAL_STATEMENT.pdf</td>
+                      <td>5.4 KB</td>
+                      <td class="mono" style="font-size: 0.72rem;">89f0e1...a2b3</td>
+                      <td><span class="badge badge-pass">Processed</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>LAND_DEED</strong></td>
+                      <td>04_LAND_DEED.pdf</td>
+                      <td>4.0 KB</td>
+                      <td class="mono" style="font-size: 0.72rem;">12a3b4...c5d6</td>
+                      <td><span class="badge badge-pass">Processed</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>BUILDING_PLAN</strong></td>
+                      <td>05_BUILDING_PLAN.pdf</td>
+                      <td>4.5 KB</td>
+                      <td class="mono" style="font-size: 0.72rem;">98e7d6...c5b4</td>
+                      <td><span class="badge badge-pass">Processed</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>FACULTY_AFFIDAVIT</strong></td>
+                      <td>06_FACULTY_AFFIDAVIT.pdf</td>
+                      <td>4.4 KB</td>
+                      <td class="mono" style="font-size: 0.72rem;">56f7a8...b9c0</td>
+                      <td><span class="badge badge-pass">Processed</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <!-- VIEW 4: APH Rulebook & Regulatory Center                       -->
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <section id="view-rulebook" class="tab-view" aria-labelledby="rulebook-heading">
+
+            <div class="page-header">
+              <div class="page-header-content">
+                <h1 class="page-title" id="rulebook-heading">APH Rulebook</h1>
+                <p class="page-desc">AICTE Approval Process Handbook (2024-27) — Version-controlled YAML Rule Definitions with Deterministic Logic</p>
+              </div>
+              <span class="badge badge-pass">Published • DEMO-RB-0.3</span>
+            </div>
+
+            <div id="rulesListContainer">
+              <!-- Populated dynamically by app.js -->
+            </div>
+
+          </section>
+
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <!-- VIEW 5: Immutable Audit Chain                                  -->
+          <!-- ══════════════════════════════════════════════════════════════ -->
+          <section id="view-audit" class="tab-view" aria-labelledby="audit-heading">
+
+            <div class="page-header">
+              <div class="page-header-content">
+                <h1 class="page-title" id="audit-heading">Immutable Audit Chain</h1>
+                <p class="page-desc">Cryptographic SHA-256 hash chaining of all reviewer decisions and pipeline actions. Append-only, tamper-evident.</p>
+              </div>
+              <span class="badge badge-pass">Chain Intact &amp; Verified</span>
+            </div>
+
+            <div style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--border-radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);">
+              <div class="table-responsive" style="border: none; border-radius: 0;">
+                <table class="modern-table">
+                  <thead>
+                    <tr>
+                      <th>Event ID</th>
+                      <th>Action</th>
+                      <th>Actor</th>
+                      <th>Object</th>
+                      <th>SHA-256 Hash</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody id="auditTableBody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </section>
+
+        </main>
+      </div><!-- /.right-pane -->
+    </div><!-- /.app-body -->
+  </div><!-- /.app-shell -->
+
+  <!-- ── Review Decision Modal ──────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="reviewModal" role="dialog" aria-modal="true" aria-labelledby="reviewModalRuleTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="card-title" id="reviewModalRuleTitle">Record Scrutiny Officer Action</h3>
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reviewActionInput">Review Action</label>
+        <select id="reviewActionInput" class="form-control">
+          <option value="CONFIRM">CONFIRM — Agree with automated deficiency finding</option>
+          <option value="OVERRULE">OVERRULE — Exercise discretion with mandatory recorded reason</option>
+          <option value="REQUEST_CORRECTION">REQUEST_CORRECTION — Send back for institution document correction</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reviewReasonInput">Officer Justification &amp; Audit Note</label>
+        <textarea id="reviewReasonInput" class="form-control" placeholder="Enter formal reason for override or confirmation (mandatory for OVERRULE)..."></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+        <button id="btnSubmitReview" class="btn btn-primary">Save Decision to Audit Trail</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Formal Deficiency Modal ────────────────────────────────────────── -->
+  <div class="modal-backdrop" id="deficiencyModal" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="card-title">Issue Formal Deficiency Notice</h3>
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="deficiencyTextInput">Deficiency Description</label>
+        <textarea id="deficiencyTextInput" class="form-control"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="deficiencyDueDateInput">Rectification Due Date</label>
+        <input type="date" id="deficiencyDueDateInput" class="form-control">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary btn-modal-cancel">Cancel</button>
+        <button id="btnSubmitDeficiency" class="btn btn-danger">Issue Deficiency Notice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast Notifications Container ──────────────────────────────────── -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

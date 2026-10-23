@@ -1,0 +1,83 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sih26261
+      POSTGRES_USER: sih_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sih_app -d sih26261"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    mem_limit: 350m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://sih_app:${DB_PASSWORD:-changeme}@db:5432/sih26261
+      REDIS_URL: redis://redis:6379/0
+      STORAGE_ROOT: /app/storage
+    volumes:
+      - ./backend:/app
+      - document_store:/app/storage
+    ports:
+      - "8000:8000"
+    mem_limit: 1g
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://sih_app:${DB_PASSWORD:-changeme}@db:5432/sih26261
+      REDIS_URL: redis://redis:6379/0
+      STORAGE_ROOT: /app/storage
+    volumes:
+      - ./backend:/app
+      - document_store:/app/storage
+    mem_limit: 3g
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python -m app.worker
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    mem_limit: 512m
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  document_store:

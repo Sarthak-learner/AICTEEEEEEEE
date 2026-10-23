@@ -1,0 +1,34 @@
+rule_key: BUILTUP_AREA_UG_ENGG
+title: Built-up area requirement (UG Engineering)
+clause_ref: "APH 2024-27, <clause to be verified against handbook>"
+source_page: "<page to be verified>"
+verified: false
+severity: CRITICAL
+applicability:
+  academic_year: "2026-27"
+  program_level: UG
+inputs:
+  total_buildup_area_sqm:
+    type: float
+    min_confidence: 0.80
+  sanctioned_intake_total:
+    type: int
+    min_confidence: 0.85
+check:
+  fn: ratio_at_least
+  params:
+    numerator: total_buildup_area_sqm
+    denominator: sanctioned_intake_total
+    minimum: 15.0
+explain: "Required at least 15 sq m per student; found {observed}. NOTE: 15 sq m is ILLUSTRATIVE."
+tests:
+  - inputs: {total_buildup_area_sqm: 18000, sanctioned_intake_total: 1200}
+    expect: PASS
+  - inputs: {total_buildup_area_sqm: 10000, sanctioned_intake_total: 1200}
+    expect: FAIL
+  - inputs: {total_buildup_area_sqm: null, sanctioned_intake_total: 1200}
+    expect: INDETERMINATE
+override:
+  allowed: true
+  requires_reason: true
+  role: SENIOR_REVIEWER

@@ -1,0 +1,29 @@
+{
+  "description": "Ground truth labels for Sunrise Institute of Technology synthetic demo application",
+  "academic_year": "2026-27",
+  "program_type": "UG Engineering",
+  "category": "Extension of Approval",
+  "ground_truth_fields": {
+    "sanctioned_intake_total": 1200,
+    "total_faculty": 58,
+    "professor_count": 6,
+    "total_land_area_acres": 3.0,
+    "deed_land_area_acres": 2.1,
+    "total_buildup_area_sqm": 24000.0,
+    "plan_buildup_area_sqm": 18000.0,
+    "audited_corpus_cr": 6.0,
+    "institution_name": "Sunrise Institute of Technology, Demo City"
+  },
+  "expected_verdicts": {
+    "FAC_RATIO_UG_ENGG": "FAIL",
+    "CADRE_DIST_UG_ENGG": "PASS",
+    "DOC_COMPLETENESS": "PASS",
+    "FIN_CORPUS_UG_ENGG": "PASS",
+    "LAND_AREA_UG_ENGG": "PASS",
+    "BUILTUP_AREA_UG_ENGG": "PASS"
+  },
+  "expected_consistency_mismatches": [
+    "land_area_cross_check",
+    "buildup_area_cross_check"
+  ]
+}

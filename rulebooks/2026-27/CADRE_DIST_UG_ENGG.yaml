@@ -1,0 +1,34 @@
+rule_key: CADRE_DIST_UG_ENGG
+title: Faculty cadre distribution (Professor proportion, UG Engineering)
+clause_ref: "APH 2024-27, <clause to be verified against handbook>"
+source_page: "<page to be verified>"
+verified: false
+severity: MAJOR
+applicability:
+  academic_year: "2026-27"
+  program_level: UG
+inputs:
+  professor_count:
+    type: int
+    min_confidence: 0.80
+  total_faculty:
+    type: int
+    min_confidence: 0.80
+check:
+  fn: cadre_proportion_at_least
+  params:
+    cadre_count: professor_count
+    total_faculty: total_faculty
+    minimum_proportion: 0.10
+explain: "Required at least 10% Professors; found {cadre_count}/{total_faculty}. NOTE: 10% is ILLUSTRATIVE."
+tests:
+  - inputs: {professor_count: 15, total_faculty: 100}
+    expect: PASS
+  - inputs: {professor_count: 5, total_faculty: 100}
+    expect: FAIL
+  - inputs: {professor_count: null, total_faculty: 100}
+    expect: INDETERMINATE
+override:
+  allowed: true
+  requires_reason: true
+  role: SENIOR_REVIEWER
